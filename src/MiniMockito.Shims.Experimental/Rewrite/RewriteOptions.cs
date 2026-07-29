@@ -1,0 +1,47 @@
+namespace MiniMockito.Shims.Experimental;
+
+/// <summary>
+/// Configures an experimental assembly rewrite operation.
+/// </summary>
+public sealed class RewriteOptions
+{
+    /// <summary>
+    /// Gets the allowed target types whose parameterless <c>newobj</c> call sites may be rewritten.
+    /// </summary>
+    public IReadOnlyList<Type> TargetTypes { get; init; } = [];
+
+    /// <summary>
+    /// Gets the allowed <b>external</b> target types (defined in an assembly other than the one being
+    /// rewritten) whose parameterless or argument <c>newobj</c> call sites may be rewritten.
+    /// Their cross-assembly <c>TypeReference</c> / <c>AssemblyReference</c> is preserved in the output.
+    /// </summary>
+    public IReadOnlyList<Type> ExternalTargetTypes { get; init; } = [];
+
+    /// <summary>
+    /// Gets the allowed target types whose static <c>call</c> sites may be rewritten.
+    /// BCL types are always excluded.
+    /// </summary>
+    public IReadOnlyList<Type> StaticTargetTypes { get; init; } = [];
+
+    /// <summary>
+    /// Gets the allowlisted instance-method call sites to rewrite (Phase 25).
+    /// Each entry identifies a declaring type full name + method name whose <c>call</c>/<c>callvirt</c>
+    /// sites in the target assembly are redirected to a method shim wrapper.
+    /// </summary>
+    public IReadOnlyList<MethodShimTarget> MethodTargets { get; init; } = [];
+
+    /// <summary>
+    /// Gets a value indicating whether the rewriter should copy nearby runtime files to the output directory.
+    /// </summary>
+    public bool CopyRuntimeFiles { get; init; } = true;
+
+    internal NewObjScanOptions ToScanOptions()
+    {
+        return new NewObjScanOptions
+        {
+            TargetTypes = ExternalTargetTypes.Count == 0
+                ? TargetTypes
+                : TargetTypes.Concat(ExternalTargetTypes).ToArray(),
+        };
+    }
+}
